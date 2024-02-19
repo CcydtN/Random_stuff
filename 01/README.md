@@ -3,7 +3,7 @@ Violentmonkey script that modify anime1 website, trying to make it better.
 
 | Before                        | After                      |
 | ----------------------------- | -------------------------- |
-| ![](asset/without_plugin.jpg) | ![](asset/with_plugin.jpg) |
+| ![without_plugin](https://github.com/CcydtN/Random_stuff/blob/main/01/asset/without_plugin.jpg?raw=True) | ![with_plugin](https://github.com/CcydtN/Random_stuff/blob/main/01/asset/with_plugin.jpg?raw=True) |
 
 ## ✨ Features
 - Set video player to full width (and also disable side bar)
