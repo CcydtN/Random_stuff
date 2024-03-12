@@ -1,0 +1,8 @@
+default:
+	just --list
+download url: clean
+	mkdir -p output
+	yt-dlp --skip-download --write-subs --sub-lang en --convert-subs srt -o './output/subtitle.%(ext)s' '{{url}}'
+	python srt2text.py './output/subtitle.en.srt' './output/content.txt'
+clean:
+	rm -rf output
