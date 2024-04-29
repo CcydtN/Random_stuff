@@ -3,7 +3,7 @@
 // @namespace   Violentmonkey Scripts
 // @match       https://ebb.io/*
 // @grant       none
-// @version     1.0
+// @version     1.0.1
 // @author      CcydtN
 // @description Add button to each episode that helps reload page automatically.
 // @require https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js
@@ -14,7 +14,7 @@ function set_flag(val) {
 	sessionStorage.setItem(flag_name, val);
 }
 function get_flag() {
-	return sessionStorage.getItem(flag_name) == "true";
+	return sessionStorage.getItem(flag_name) === "true";
 }
 
 const config = {
@@ -26,8 +26,7 @@ const config = {
 
 // Entry point
 $(document).ready(() => {
-	"use strict";
-	const observer = new MutationObserver(page_modify);
+		const observer = new MutationObserver(page_modify);
 	observer.observe(document.body, config);
 });
 
@@ -39,15 +38,16 @@ function page_modify(list, observer) {
 
 	add_button_for_each_episode();
 
-	let flag = get_flag();
+	const flag = get_flag();
 	// console.log({toggle});
 	if (!flag) {
 		observer.observe(document.body, config);
 		return;
 	}
 
-	const isError = $(".error-message").length != 0;
+	const isError = $(".error-message").length !== 0;
 	if (isError) {
+		console.log("Detect loading error, try reloading");
 		fail_handle();
 		observer.observe(document.body, config);
 		return;
@@ -65,20 +65,24 @@ function page_modify(list, observer) {
 function add_button_for_each_episode() {
 	$("div.actions").each(function (index, element) {
 		// skip if already append
-		if ($(this).children().length != 1) {
+		if ($(element).children().length !== 1) {
 			return;
 		}
 
 		const clone = $(this).children().first().clone();
-		let href = clone.attr("href");
-		let idx = href.lastIndexOf("=");
-		let episode = href.substring(idx + 1);
+		const href = clone.attr("href");
+		const episode_start = href.indexOf("=") + 1;
+		const episode = href.substring(episode_start);
+
+		const seasonId_start = href.indexOf("x") + 1;
+		const seasonId_end = href.indexOf("&");
+		const seasonId = href.substring(seasonId_start, seasonId_end);
 
 		clone.on("click", (event) => {
 			console.log("Start reloading");
 			event.preventDefault();
 			set_flag(true);
-			updateWatchHistory(episode);
+			updateWatchHistory(seasonId, episode);
 			location.reload();
 		});
 
@@ -86,26 +90,28 @@ function add_button_for_each_episode() {
 		clone.text("(・∀・)");
 
 		$(this).append(clone);
+		console.log(`Button added, episode: ${episode}, seasonId: ${seasonId}`);
 	});
 }
 
 function fail_handle() {
 	// check for a div
 	// if exist, it means fail_handle had run already and no need to run again.
-	if ($(".error-message div div").length == 0) {
+	if ($(".error-message div div").length !== 0) {
 		return;
 	}
+	console.log("check");
 
 	delay = 5;
 	delay_ns = delay * 1000;
-	console.log("Set timer " + delay + "s");
+	console.log(`Set timer ${delay}s`);
 
 	// add reload countdown and cancel button to error message
-	let counter = $("<a>", { text: delay });
-	let content = $("<a>", { text: " 秒後重試... " });
-	let cancel = $("<a>", { href: "javascript:void(0)", text: "取消" });
+	const counter = $("<a>", { text: delay });
+	const content = $("<a>", { text: " 秒後重試... " });
+	const cancel = $("<a>", { href: "javascript:void(0)", text: "取消" });
 
-	let message = $("<div>");
+	const message = $("<div>");
 	message.append($("<br>"));
 	message.append(counter);
 	message.append(content);
@@ -113,15 +119,15 @@ function fail_handle() {
 
 	$(".error-message div").append(message);
 
-	var idxs = [];
+	const idxs = [];
 	idxs.push(
 		setTimeout(() => {
 			location.reload();
 		}, delay_ns),
 	); // reload timeout
 
-	for (var i = 1; i <= 5; i += 1) {
-		let idx = setTimeout(() => {
+	for (let i = 1; i <= 5; i += 1) {
+		const idx = setTimeout(() => {
 			counter.text(counter.text() - 1);
 		}, 1000 * i);
 		idxs.push(idx);
@@ -130,27 +136,25 @@ function fail_handle() {
 	cancel.on("click", (event) => {
 		console.log("Stop reloading");
 		set_flag(false);
-		for (var idx of idxs) {
+		for (const idx of idxs) {
 			clearTimeout(idx);
 		}
 		message.remove();
 	});
 }
 
-function updateWatchHistory(episode) {
-	const current_url = window.location.href;
+function updateWatchHistory(seasonId, episode) {
 	const api_url = "https://ebb.io/_/update_watch_history";
 
-	const seasonId = current_url.substring(current_url.lastIndexOf("x") + 1);
-	const title = '"' + episode + '"';
-	var data = new FormData();
+	const title = `"${episode}"`;
+	const data = new FormData();
 
 	data.set("seasonId", seasonId);
 	data.set("title", title);
 	data.set("time", 0);
 	console.log({ data });
 
-	var xhttp = new XMLHttpRequest();
+	const xhttp = new XMLHttpRequest();
 	xhttp.open("POST", api_url, false);
 	xhttp.send(data);
 }
