@@ -1,0 +1,6 @@
+default:
+	just --list
+setup:
+	pipenv install
+gen count='20':
+	pipenv run python generator.py {{count}}
