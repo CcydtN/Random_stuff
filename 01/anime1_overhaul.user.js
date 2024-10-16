@@ -6,7 +6,7 @@
 // @exclude     http*://anime1.me/
 // @exclude     http*://anime1.pw/
 // @grant       none
-// @version     1.0.1
+// @version     1.0.2
 // @author      CcydtN
 // @description It currently do two things. One, set player to full page width (and remove the side bar). Second, disable volume change on scroll.
 // ==/UserScript==
@@ -62,6 +62,11 @@ function follow_video_on_resize() {
 	});
 
 	window.addEventListener("resize", () => {
+		// Stop trigger this handler when playing video in fullscreen
+		if (window.innerHeight === screen.height) {
+			return;
+		}
+
 		// Compute which content is being view before resizing.
 		const centre_before = current_pos + window.innerHeight / 2;
 		const video_idx_before = findClosestIdx(video_players, centre_before);
